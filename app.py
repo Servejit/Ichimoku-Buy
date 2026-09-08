@@ -6,9 +6,10 @@ import numpy as np
 import requests, io
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
+from copy import copy
 
 st.set_page_config(page_title="Nifty 200 Bullish Scanner", layout="wide")
-st.title("Nifty 200 Bullish — Ichimoku + Volume + MACD")
+st.title("Nifty 200 Bullish â€” Ichimoku + Volume + MACD")
 st.caption("Same 1H + 15M + 5M scoring logic as the Colab version.")
 
 INDEX_URL="https://www.niftyindices.com/IndexConstituent/ind_nifty200list.csv"
@@ -171,8 +172,9 @@ if st.button("Scan Nifty 200",type="primary"):
         bio=io.BytesIO()
         with pd.ExcelWriter(bio,engine="openpyxl") as w:
             df.to_excel(w,sheet_name="Bullish Stocks",index=False)
-            ws=w["Bullish Stocks"];ws.freeze_panes="A2";ws.auto_filter.ref=ws.dimensions
-            for cell in ws[1]:cell.font=cell.font.copy(bold=True)
+            ws=w.book["Bullish Stocks"];ws.freeze_panes="A2";ws.auto_filter.ref=ws.dimensions
+            for cell in ws[1]:
+                f=copy(cell.font);f.bold=True;cell.font=f
             for col in ws.columns:
                 ws.column_dimensions[col[0].column_letter].width=min(max(max(len(str(x.value)) if x.value is not None else 0 for x in col)+2,10),28)
         st.download_button("Download Excel",data=bio.getvalue(),file_name="Nifty200_Ichimoku_Volume_MACD.xlsx",mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
